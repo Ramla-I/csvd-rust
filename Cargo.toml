@@ -1,0 +1,16 @@
+[package]
+name = "csvd"
+version = "0.1.0"
+authors = ["Ramla-I <ijazramla@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+backtrace = "0.2"
+
+[dependencies.num-complex]
+version = "0.2"
+default-features = false
+
+[dependencies.num-traits]
+version = "0.2.6"
+default-features = false
