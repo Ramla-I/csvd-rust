@@ -31,12 +31,33 @@ use num_traits::float::FloatCore;
 
 const NBIG: usize = 100;
 
+fn print_matrix_vec(mat: &mut Vec<Vec<Complex32>>, rows: usize, cols: usize) {
+    for i in 0..rows {
+        for j in 0..cols{
+            print!("{} + {}i, ", mat[i][j].re, mat[i][j].im);
+        }
+        println!("");
+    }
+    println!("");
+}
+
+fn print_matrix(mat: &mut [[Complex32; 4]; 4], rows: usize, cols: usize) {
+    for i in 0..rows {
+        for j in 0..cols{
+            print!("{} + {}i, ", mat[i][j].re, mat[i][j].im);
+        }
+        println!("");
+    }
+    println!("");
+}
+
+
 fn cabs(input: &Complex32) -> f32{
     (input.re.powi(2) + input.im.powi(2)).sqrt()
 }
 
-fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usize, p: usize, nu: usize, nv: usize, 
-        s: &mut Vec<f32>, u: &mut Vec<Vec<Complex32>>, v: &mut Vec<Vec<Complex32>>) 
+fn csvd(a: &mut [[Complex32; 4]; 4], mmax: usize, nmax: usize, n: usize, m: usize, p: usize, nu: usize, nv: usize, 
+        s: &mut Vec<f32>, u: &mut [[Complex32; 4]; 4], v: &mut [[Complex32; 4]; 4]) 
         -> Result<(), &'static str> {
     
     //check n
@@ -485,13 +506,20 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 fn main() {
     println!("Hello, world!");
 
-    let mut a: Vec<Vec<Complex32>> = vec![
+    /* let mut a: Vec<Vec<Complex32>> = vec![
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4032, im:0.0876}, Complex32{re: 0.1678, im:0.0390}, Complex32{re: 0.5425, im:0.5118}], 
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.3174, im:0.3352}, Complex32{re: 0.9784, im:0.4514}, Complex32{re: -0.4416, im:-1.3188}],
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4008, im:-0.0504}, Complex32{re: 0.0979, im:-0.2558}, Complex32{re: 0.2983, im:0.7800}]];
+    */
+     let mut a: [[Complex32; 4]; 4] = [
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4032, im:0.0876}, Complex32{re: 0.3174, im:0.3352}, Complex32{re: 0.4008, im: -0.0504}], 
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.1678, im:0.0390}, Complex32{re: 0.9784, im:0.4514}, Complex32{re: 0.0979, im:-0.2558}],
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.5425, im:0.5118}, Complex32{re: -0.4416, im:-1.3188}, Complex32{re: 0.2983, im:0.7800}]];
 
-    let mut u: Vec<Vec<Complex32>> = vec![
+ 
+ /*   let mut u: Vec<Vec<Complex32>> = vec![
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
@@ -502,15 +530,29 @@ fn main() {
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
+*/
+    let mut u: [[Complex32; 4]; 4] = [
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
+
+    let mut v: [[Complex32; 4]; 4] = [
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
+                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
 
 
     let mut s: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0];
 
+    print_matrix(&mut a, 4, 4);
 
     csvd(&mut a, 3, 3, 3, 3, 0, 3, 3, &mut s, &mut u, &mut v);
-
+    
+    print_matrix(&mut a, 4, 4);
+    print_matrix(&mut u, 4, 4);
+    print_matrix(&mut v, 4, 4);
     println!("s: {:?}", s);
-    println!("u: {:?}", u);
-    println!("v: {:?}", v);
 
 }
