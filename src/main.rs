@@ -1,27 +1,79 @@
-/*
-    CSVD computes the singular value decomposition of an M by N complex matrix.
-    Discussion:
+/// CSVD computes the singular value decomposition of an M by N complex matrix.
+///
+/// Discussion:
+///
+///    This routine requires that N <= M.
+///
+///    The singular value decomposition of a complex M by N matrix A
+///    has the form
+///
+///      A = U S V*
+///
+///    where 
+///
+///      U is an M by M unitary matrix,
+///      S is an M by N diagonal matrix,
+///      V is an N by N unitary matrix.
+///
+///    Moreover, the entries of S are nonnegative and occur on the diagonal
+///    in descending order.
+///
+///    Several internal arrays are dimensioned under the assumption
+///    that N <= 100.
 
-    This routine requires that N <= M.
+///
+///  Reference:
+///
+///    Peter Businger, Gene Golub,
+///    Algorithm 358:
+///    Singular Value Decomposition of a Complex Matrix,
+///    Communications of the ACM,
+///    Volume 12, Number 10, October 1969, pages 564-565.
+///
+///  Parameters:
+///
+///   Input/output, complex A(MMAX,*), the M by N matrix, which may be
+///    augmented by P extra columns to which the transformation U*
+///    is to be applied.  On output, A has been overwritten, and
+///    if 0 < P, columns N+1 through N+P have been premultiplied by U*.
+///
+///    Input, integer MMAX, the leading dimension of the arrays A
+///    and U.
+///
+///    Input, integer NMAX, the leading dimension of V, and perhaps
+///    the second dimension of A and U.
+///
+///    Input, integer M, N, the number of rows and columns in A.
+///    It must be the case that 1 <= N <= M.  Several internal arrays are
+///    dimensioned under the assumption that N <= NBIG, where NBIG
+///    is an internal parameter, currently set to 100.
+///
+///    Input, integer P, the number of vectors, stored in A(*,N+1:N+P),
+///  to which the transformation U* should be applied.
+///
+///    Input, integer NU, the number of columns of U to compute.
+///
+///    Input, integer NV, the number of columns of V to compute.
+///
+///    Output, real S(N), the computed singular values.
+///
+///    Output, complex U(MMAX,NU), the first NU columns of U.
+///
+///    Output, complex V(NMAX,NV), the first NV columns of V.
+///
+///  Local Parameters:
+///
+///    Local, real ETA, the relative machine precision.
+///    The original text uses ETA = 1.5E-8.
+///
+///    Local, integer NBIG, is a parameter used to dimension work arrays.
+///    The size of NBIG limits the maximum possible size of N that can
+///    be handled.  If you want to work with values of N that are larger,
+///    simply increase the value assigned to NBIG below.
+///
+///    Local, real TOL, the smallest normalized positive number, divided by ETA.
+///    The original test uses TOL = 1.E-31.
 
-    The singular value deomposition of a omplex M by N matrix A
-    has the form
-
-      A = U S V*
-
-    where 
-
-      U is an M by M unitary matrix,
-      S is an M by N diagonal matrix,
-      V is an N by N unitary matrix.
-
-    Moreover, the entries of S are nonnegative and occur on the diagonal
-    in descending order.
-
-    Several internal arrays are dimensioned under the assumption
-    that N <= 100.
-
-*/
 extern crate num_complex;
 extern crate num_traits;
 extern crate backtrace;
@@ -31,17 +83,7 @@ use num_traits::float::FloatCore;
 
 const NBIG: usize = 100;
 
-fn print_matrix_vec(mat: &mut Vec<Vec<Complex32>>, rows: usize, cols: usize) {
-    for i in 0..rows {
-        for j in 0..cols{
-            print!("{} + {}i, ", mat[i][j].re, mat[i][j].im);
-        }
-        println!("");
-    }
-    println!("");
-}
-
-fn print_matrix(mat: &mut [[Complex32; 4]; 4], rows: usize, cols: usize) {
+fn print_matrix(mat: &Vec<Vec<Complex32>>, rows: usize, cols: usize) {
     for i in 0..rows {
         for j in 0..cols{
             print!("{} + {}i, ", mat[i][j].re, mat[i][j].im);
@@ -56,10 +98,10 @@ fn cabs(input: &Complex32) -> f32{
     (input.re.powi(2) + input.im.powi(2)).sqrt()
 }
 
-fn csvd(a: &mut [[Complex32; 4]; 4], mmax: usize, nmax: usize, n: usize, m: usize, p: usize, nu: usize, nv: usize, 
-        s: &mut Vec<f32>, u: &mut [[Complex32; 4]; 4], v: &mut [[Complex32; 4]; 4]) 
+fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usize, p: usize, nu: usize, nv: usize, 
+        s: &mut Vec<f32>, u: &mut Vec<Vec<Complex32>>, v: &mut Vec<Vec<Complex32>>) 
         -> Result<(), &'static str> {
-    
+
     //check n
     if n < 1 {
         return Err("Fatal Error = Input N < 1");
@@ -83,7 +125,8 @@ fn csvd(a: &mut [[Complex32; 4]; 4], mmax: usize, nmax: usize, n: usize, m: usiz
     let mut b: [f32; NBIG] = [0.0; NBIG];
     let mut k1;
     let tol = 1.5 * (10.0 as f32).powi(-31);
-//10 continue for k in 0..n
+
+    //10 continue for k in 0..n
     for k in 1..=n {
         k1 = k + 1;
 
@@ -92,7 +135,7 @@ fn csvd(a: &mut [[Complex32; 4]; 4], mmax: usize, nmax: usize, n: usize, m: usiz
         for i in k..=m {
             z = z + (a[i][k].re).powi(2) + (a[i][k].im).powi(2);
         }
-        
+
         b[k] = 0.0;
 
         let (mut w, mut q);
@@ -136,7 +179,7 @@ fn csvd(a: &mut [[Complex32; 4]; 4], mmax: usize, nmax: usize, n: usize, m: usiz
 
         //Elimination of A(K,J), J = K+2, ..., N
 
-        if (k == n) {
+        if k == n {
             break;
         }
 
@@ -185,9 +228,9 @@ fn csvd(a: &mut [[Complex32; 4]; 4], mmax: usize, nmax: usize, n: usize, m: usiz
     // Tolerance for negligible elements.
     //140 continue
     let mut eps: f32 = 0.0;
-    let mut eta: f32 = 1.1920929 * (10.0 as f32).powi(-7);
-    let mut b: [f32; NBIG] = [0.0; NBIG];
+    let eta: f32 = 1.1920929 * (10.0 as f32).powi(-7);
     let mut t: [f32; NBIG] = [0.0; NBIG];
+
     for k in 1..=n {
        s[k] = b[k];
        t[k] = c[k];
@@ -503,23 +546,27 @@ fn csvd(a: &mut [[Complex32; 4]; 4], mmax: usize, nmax: usize, n: usize, m: usiz
     Ok(())   
 }
 
-fn main() {
-    println!("Hello, world!");
+/// Finds the pseudo-inverse of a matrix from the singular value decompositions
+/// pinv = U x S x V*
+/// Assumes that inv is initialized to 0.0 + 0.0j
+fn find_matrix_inv_from_svd(s: &Vec<f32>, u: &Vec<Vec<Complex32>>, v: &Vec<Vec<Complex32>>, m: usize, n: usize, inv: &mut Vec<Vec<Complex32>>) {
+    let min = m.min(n);
+    for i in 1..=m {
+        for j in 1..=n {
+            for k in 1..=min {
+                inv[i][j] = inv[i][j] + u[i][k] * s[k] * v[j][j].conj();
+            }
+        }
+    }
+}
 
-    /* let mut a: Vec<Vec<Complex32>> = vec![
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4032, im:0.0876}, Complex32{re: 0.1678, im:0.0390}, Complex32{re: 0.5425, im:0.5118}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.3174, im:0.3352}, Complex32{re: 0.9784, im:0.4514}, Complex32{re: -0.4416, im:-1.3188}],
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4008, im:-0.0504}, Complex32{re: 0.0979, im:-0.2558}, Complex32{re: 0.2983, im:0.7800}]];
-    */
-     let mut a: [[Complex32; 4]; 4] = [
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4032, im:0.0876}, Complex32{re: 0.3174, im:0.3352}, Complex32{re: 0.4008, im: -0.0504}], 
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.1678, im:0.0390}, Complex32{re: 0.9784, im:0.4514}, Complex32{re: 0.0979, im:-0.2558}],
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.5425, im:0.5118}, Complex32{re: -0.4416, im:-1.3188}, Complex32{re: 0.2983, im:0.7800}]];
+/// Checks the svd function by comparing original matrix with inverse
+/// a has dimensions m x n
+fn check_svd(mut a: &mut Vec<Vec<Complex32>>, mut inv: &mut Vec<Vec<Complex32>>, m: usize, n: usize) {
+    
+    let a_orig  = a.clone(); 
 
- 
- /*   let mut u: Vec<Vec<Complex32>> = vec![
+    let mut u: Vec<Vec<Complex32>> = vec![
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
@@ -530,29 +577,49 @@ fn main() {
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
                                         vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
-*/
-    let mut u: [[Complex32; 4]; 4] = [
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
 
-    let mut v: [[Complex32; 4]; 4] = [
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
-                                        [Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
 
 
     let mut s: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0];
 
-    print_matrix(&mut a, 4, 4);
-
-    csvd(&mut a, 3, 3, 3, 3, 0, 3, 3, &mut s, &mut u, &mut v);
+    let _ = csvd(&mut a, 3, 3, 3, 3, 0, 3, 3, &mut s, &mut u, &mut v);
     
-    print_matrix(&mut a, 4, 4);
-    print_matrix(&mut u, 4, 4);
-    print_matrix(&mut v, 4, 4);
-    println!("s: {:?}", s);
+    find_matrix_inv_from_svd(&s, &u, &v, 3, 3, &mut inv);
+
+    let mut equal = true;
+
+    for i in 1..=3 {
+        for j in 1..=3 {
+            if a_orig[i][j] != inv[i][j] {
+                equal = false;
+            }
+        }
+    }
+
+    if equal == false {
+        println!("SVD pseudo-inverse failed!");
+    }
+
+    print_matrix(&a_orig, m, n);
+    print_matrix(&inv, m, n);
+}
+
+fn main() {
+
+    let mut a: Vec<Vec<Complex32>> = vec![
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4032, im:0.0876}, Complex32{re: 0.1678, im:0.0390}, Complex32{re: 0.5425, im:0.5118}], 
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.3174, im:0.3352}, Complex32{re: 0.9784, im:0.4514}, Complex32{re: -0.4416, im:-1.3188}],
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4008, im:-0.0504}, Complex32{re: 0.0979, im:-0.2558}, Complex32{re: 0.2983, im:0.7800}]];
+
+    let mut inv: Vec<Vec<Complex32>> = vec![
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
+    
+    check_svd(&mut a, &mut inv, 4, 4) ;
+
+    
 
 }
