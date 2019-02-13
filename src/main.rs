@@ -93,6 +93,12 @@ fn print_matrix(mat: &Vec<Vec<Complex32>>, rows: usize, cols: usize) {
     println!("");
 }
 
+fn print_vector(mat: &Vec<f32>, rows: usize) {
+    for i in 0..rows {
+        println!("{}", mat[i]);
+    }
+    println!("");
+}
 
 fn cabs(input: &Complex32) -> f32{
     (input.re.powi(2) + input.im.powi(2)).sqrt()
@@ -546,18 +552,27 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
     Ok(())   
 }
 
-/// Finds the pseudo-inverse of a matrix from the singular value decompositions
-/// pinv = U x S x V*
-/// Assumes that inv is initialized to 0.0 + 0.0j
-fn find_matrix_inv_from_svd(s: &Vec<f32>, u: &Vec<Vec<Complex32>>, v: &Vec<Vec<Complex32>>, m: usize, n: usize, inv: &mut Vec<Vec<Complex32>>) {
+/// Finds the original matrix from the singular value decompositions
+/// A = U x S x V*
+fn find_matrix_from_svd(s: &Vec<f32>, u: &Vec<Vec<Complex32>>, v: &Vec<Vec<Complex32>>, m: usize, n: usize, a: &mut Vec<Vec<Complex32>>) {
     let min = m.min(n);
     for i in 1..=m {
         for j in 1..=n {
+            a[i][j].re = 0.0;
+            a[i][j].im = 0.0;
             for k in 1..=min {
-                inv[i][j] = inv[i][j] + u[i][k] * s[k] * v[j][j].conj();
+                a[i][j] = a[i][j] + u[i][k] * s[k] * v[j][k].conj();
             }
         }
     }
+}
+
+/// Finds the pseudo-inverse of a matrix from the singular value decompositions
+/// INV = V x S+ x U*
+/// where S+ is found by taking the reciprocal fo all non-zero elements of S and changing the dimension from m to nxm
+/// and U* is the conjugate-transpose of U
+fn find_pinv_from_svd(s: &Vec<f32>, u: &Vec<Vec<Complex32>>, v: &Vec<Vec<Complex32>>, m: usize, n: usize, inv: &mut Vec<Vec<Complex32>>) {
+
 }
 
 /// Checks the svd function by comparing original matrix with inverse
@@ -584,24 +599,29 @@ fn check_svd(mut a: &mut Vec<Vec<Complex32>>, mut inv: &mut Vec<Vec<Complex32>>,
 
     let _ = csvd(&mut a, 3, 3, 3, 3, 0, 3, 3, &mut s, &mut u, &mut v);
     
-    find_matrix_inv_from_svd(&s, &u, &v, 3, 3, &mut inv);
+    find_matrix_from_svd(&s, &u, &v, 3, 3, &mut a);
 
     let mut equal = true;
 
+    let eps = 0.0001;
+
     for i in 1..=3 {
         for j in 1..=3 {
-            if a_orig[i][j] != inv[i][j] {
+            if (a_orig[i][j].re - a[i][j].re).powi(2) + (a_orig[i][j].im - a[i][j].im).powi(2) > eps {
                 equal = false;
             }
         }
     }
 
     if equal == false {
-        println!("SVD pseudo-inverse failed!");
+        println!("SVD failed!");
+    }
+    else {
+        println!("SVD successful!");
     }
 
     print_matrix(&a_orig, m, n);
-    print_matrix(&inv, m, n);
+    print_matrix(&a, m, n);
 }
 
 fn main() {
