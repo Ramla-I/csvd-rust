@@ -277,6 +277,19 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
     let mut r;
     let mut g;
 
+    println!("****************");
+    
+    println!("a");
+    print_matrix(a, 4, 4);
+
+    println!("u");
+    print_matrix(u, 4, 4);
+
+    println!("v");
+    print_matrix(v, 4, 4);
+
+    println!("****************");
+
     // QR diagonalization.
     for kk in 1..=n {
         k = n + 1 - kk;
@@ -406,14 +419,14 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
                     }
                 }
 
-                if p != 0 {
-                    for j in (n + 1)..=(n + p) {
-                        q = a[i-1][j];
-                        r = a[i][j];
-                        a[i-1][j] = q * cs + r * sn;
-                        a[i][j] = r * cs - q * sn;
-                    }
-                }
+                // if p != 0 {
+                //     for j in (n + 1)..=(n + p) {
+                //         q = a[i-1][j];
+                //         r = a[i][j];
+                //         a[i-1][j] = q * cs + r * sn;
+                //         a[i][j] = r * cs - q * sn;
+                //     }
+                // }
             }
 
             t[l] = 0.0;
@@ -473,13 +486,13 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
             }
 
             // Interchange A(J,N1:NP) and A(K,N1:NP).
-            if p != 0 {
-                for i in (n + 1)..=(n + p) {
-                    q = a[j][i];
-                    a[j][i] = a[k][i];
-                    a[k][i] = q;
-                }
-            }
+            // if p != 0 {
+            //     for i in (n + 1)..=(n + p) {
+            //         q = a[j][i];
+            //         a[j][i] = a[k][i];
+            //         a[k][i] = q;
+            //     }
+            // }
         }
     }
 
