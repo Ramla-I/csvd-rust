@@ -133,12 +133,12 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
     let tol = 1.5 * (10.0 as f32).powi(-31);
 
     //10 continue for k in 0..n
-    for k in 1..=n {
+    for k in 0..n {
         k1 = k + 1;
 
         // Elimination of A(I,K), I = K+1, ..., M.
         let mut z: f32 = 0.0;
-        for i in k..=m {
+        for i in k..m {
             z = z + (a[i][k].re).powi(2) + (a[i][k].im).powi(2);
         }
 
@@ -160,16 +160,16 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 
             a[k][k] = q * ( z + w );
 
-            if k != (n + p) {
-                for j in k1..=(n + p){
+            if k != (n - 1 + p) {
+                for j in k1..(n + p){
                     q = Complex32{ re: 0.0, im: 0.0};
                     
-                    for i in k..=m {
+                    for i in k..m {
                         q = q + a[i][k].conj() * a[i][j];
                     }
                     q = q / ( z * ( z + w ) );
 
-                    for i in k..=m {
+                    for i in k..m {
                         a[i][j] = a[i][j] - q * a[i][k]
                     }
                 }
@@ -177,7 +177,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
                 // Phase transformation.
                 q = -a[k][k].conj() / cabs(&a[k][k]);
 
-                for j in k1..=(n + p) {
+                for j in k1..(n + p) {
                     a[k][j] = q * a[k][j];
                 }
             }
@@ -185,12 +185,12 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 
         //Elimination of A(K,J), J = K+2, ..., N
 
-        if k == n {
+        if k == (n - 1) {
             break;
         }
 
         z = 0.0;
-        for j in k1..=n {
+        for j in k1..n {
             z = z + a[k][j].re.powi(2) + a[k][j].im.powi(2)
         }
         c[k1] = 0.0;
@@ -209,23 +209,23 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 
             a[k][k1] = q * (z + w);
 
-            for i in k1..=m {
+            for i in k1..m {
                 q = Complex32{ re: 0.0, im: 0.0};
 
-                for j in k1..=n {
+                for j in k1..n {
                     q = q + a[k][j].conj()  * a[i][j];
                 }
 
                 q = q / (z * (z + w));
 
-                for j in k1..=n {
+                for j in k1..n {
                     a[i][j] = a[i][j] - q * a[k][j];
                 }
             }
     
             // Phase transformation.
             q = -a[k][k1].conj() / cabs(&a[k][k1]);
-            for i in k1..=m {
+            for i in k1..m {
                 a[i][k1] = a[i][k1] * q;
             }
         }
@@ -237,7 +237,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
     let eta: f32 = 1.1920929 * (10.0 as f32).powi(-7);
     let mut t: [f32; NBIG] = [0.0; NBIG];
 
-    for k in 1..=n {
+    for k in 0..n {
        s[k] = b[k];
        t[k] = c[k];
        eps = eps.max(s[k] + t[k]);
@@ -247,8 +247,8 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 
     // Initialization of U and V.
     if 0 < nu {
-        for j in 1..=nu {
-            for i in 1..=m {
+        for j in 0..nu {
+            for i in 0..m {
                 u[i][j] = Complex32{re: 0.0, im: 0.0};
             }
             u[j][j] = Complex32{re: 1.0, im: 0.0};
@@ -256,13 +256,26 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
     }
 
     if 0 < nv {
-        for j in 1..=nv {
-            for i in 1..=n {
+        for j in 0..nv {
+            for i in 0..n {
                 v[i][j] = Complex32{re: 0.0, im: 0.0};
             }
             v[j][j] = Complex32{re: 1.0, im: 0.0};
         }
     }
+
+    // println!("****************");
+    
+    // println!("a");
+    // print_matrix(a, 3, 3);
+
+    // println!("u");
+    // print_matrix(u, 3, 3);
+
+    // println!("v");
+    // print_matrix(v, 3, 3);
+
+    // println!("****************");
 
     let mut l = 0;
     let mut cs;
@@ -274,31 +287,18 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
     let mut x;
     let mut y;
     let mut q;
-    let mut r;
+    // let mut r;
     let mut g;
 
-    println!("****************");
-    
-    println!("a");
-    print_matrix(a, 4, 4);
-
-    println!("u");
-    print_matrix(u, 4, 4);
-
-    println!("v");
-    print_matrix(v, 4, 4);
-
-    println!("****************");
-
     // QR diagonalization.
-    for kk in 1..=n {
-        k = n + 1 - kk;
+    for kk in 0..n {
+        k = n - 1 - kk;
 
         //Test for split.
         //220 continue
         loop {
-            for ll in 1..=k {
-                l = k + 1 - ll;
+            for ll in 0..=k {
+                l = k - ll;
                 if t[l].abs() <= eps {
                     //go to 290
                     break;
@@ -334,7 +334,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
                     sn = - f / w;
 
                     if 0 < nu {
-                        for j in 1..=n {
+                        for j in 0..n {
                             x = u[j][l1].re;
                             y = u[j][i].re;
                             u[j][l1] = Complex32{re: x * cs + y * sn, im: 0.0};
@@ -342,14 +342,14 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
                         }
                     }
 
-                    if p != 0 {
-                        for j in (n + 1)..=(n + p) {
-                            q = a[l1][j];
-                            r = a[i][j];
-                            a[l1][j] = q * cs + r * sn;
-                            a[i][j] = r * cs - q * sn;
-                        }
-                    }
+                    // if p != 0 {
+                    //     for j in (n + 1)..=(n + p) {
+                    //         q = a[l1][j];
+                    //         r = a[i][j];
+                    //         a[l1][j] = q * cs + r * sn;
+                    //         a[i][j] = r * cs - q * sn;
+                    //     }
+                    // }
                 }
             }
 
@@ -395,7 +395,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
                 y = y * cs;
 
                 if 0 < nv {
-                    for j in 1..=n {
+                    for j in 0..n {
                         x = v[j][i-1].re;
                         w = v[j][i].re;
                         v[j][i-1] = Complex32{re: x * cs + w * sn, im: 0.0};
@@ -411,7 +411,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
                 x = cs * y - sn * g;
 
                 if 0 < nu {
-                    for j in 1..=n {
+                    for j in 0..n {
                         y = u[j][i-1].re;
                         w = u[j][i].re;
                         u[j][i-1] = Complex32{re: y * cs + w * sn, im: 0.0};
@@ -442,7 +442,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
             s[k] = -w;
 
             if 0 < nv {
-                for j in 1..=n {
+                for j in 0..n {
                     v[j][k] = -v[j][k];
                 }
             }
@@ -452,11 +452,11 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
     let mut j;
     
     // Sort the singular values.
-    for k in 1..=n {
+    for k in 0..n {
         g = -1.0;
         j = k;
 
-        for i in k..=n {
+        for i in k..n {
             if g < s[i] { 
                 g = s[i];
                 j = i;
@@ -469,7 +469,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 
             //Interchange V(1:N,J) and V(1:N,K).
             if 0 < nv {
-               for i in 1..=n {
+               for i in 0..n {
                     q = v[i][j];
                     v[i][j] = v[i][k];
                     v[i][k] = q;
@@ -478,7 +478,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 
             // Interchange U(1:N,J) and U(1:N,K).
             if 0 < nu {
-                for i in 1..=n {
+                for i in 0..n {
                     q = u[i][j];
                     u[i][j] = u[i][k];
                     u[i][k] = q;
@@ -498,27 +498,27 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 
     // Back transformation.
     if 0 < nu {
-        for kk in 1..=n {
-            k = n + 1 - kk;
+        for kk in 0..n {
+            k = n - 1 - kk;
 
             if b[k] != 0.0 {
                 q = -a[k][k] / cabs(&a[k][k]);
 
-                for j in 1..=nu {
+                for j in 0..nu {
                     u[k][j] = q * u[k][j];
                 }
 
-                for j in 1..=nu {
+                for j in 0..nu {
 
                     q = Complex32{re: 0.0, im: 0.0};
 
-                    for i in k..=m {
+                    for i in k..m {
                         q = q + a[i][k].conj() * u[i][j];
                     }
 
                     q = q / (cabs(&a[k][k]) * b[k]);
 
-                    for i in k..=m {
+                    for i in k..m {
                         u[i][j] = u[i][j] - q * a[i][k];
                     }
 
@@ -534,26 +534,26 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 
         if 1 < n {
 
-            for kk in 2..=n {
-                k = n + 1 - kk;
+            for kk in 1..n {
+                k = n - 1 - kk;
                 k1 = k + 1;
 
                 if c[k1] != 0.0 { 
                     q = -(a[k][k1].conj()) / cabs(&a[k][k1]);
 
-                    for j in 1..=nv {
+                    for j in 0..nv {
                         v[k1][j] = q * v[k1][j];
                     }
 
-                    for j in 1..=nv {
+                    for j in 0..nv {
                         q = Complex32{re: 0.0, im: 0.0};
 
-                        for i in k1..=n {
+                        for i in k1..n {
                             q = q + a[k][i] * v[i][j];
                         }
                         q = q / (cabs(&a[k][k1]) * c[k1]);
 
-                        for i in k1..=n {
+                        for i in k1..n {
                             v[i][j] = v[i][j] - q * a[k][i].conj();
                         }
                     }
@@ -569,11 +569,11 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 /// A = U x S x V*
 fn find_matrix_from_svd(s: &Vec<f32>, u: &Vec<Vec<Complex32>>, v: &Vec<Vec<Complex32>>, m: usize, n: usize, a: &mut Vec<Vec<Complex32>>) {
     let min = m.min(n);
-    for i in 1..=m {
-        for j in 1..=n {
+    for i in 0..m {
+        for j in 0..n {
             a[i][j].re = 0.0;
             a[i][j].im = 0.0;
-            for k in 1..=min {
+            for k in 0..min {
                 a[i][j] = a[i][j] + u[i][k] * s[k] * v[j][k].conj();
             }
         }
@@ -594,64 +594,76 @@ fn check_svd(mut a: &mut Vec<Vec<Complex32>>, mut inv: &mut Vec<Vec<Complex32>>,
     
     let a_orig  = a.clone(); 
 
+    // let mut u: Vec<Vec<Complex32>> = vec![
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
+
+    // let mut v: Vec<Vec<Complex32>> = vec![
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
+
+
     let mut u: Vec<Vec<Complex32>> = vec![
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
 
     let mut v: Vec<Vec<Complex32>> = vec![
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
 
-
-
-    let mut s: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0];
+    let mut s: Vec<f32> = vec![0.0, 0.0, 0.0];
 
     let _ = csvd(&mut a, 3, 3, 3, 3, 0, 3, 3, &mut s, &mut u, &mut v);
     
-    find_matrix_from_svd(&s, &u, &v, 3, 3, &mut a);
+    // find_matrix_from_svd(&s, &u, &v, 3, 3, &mut a);
 
-    let mut equal = true;
+    // let mut equal = true;
 
-    let eps = 0.0001;
+    // let eps = 0.0001;
 
-    for i in 1..=3 {
-        for j in 1..=3 {
-            if (a_orig[i][j].re - a[i][j].re).powi(2) + (a_orig[i][j].im - a[i][j].im).powi(2) > eps {
-                equal = false;
-            }
-        }
-    }
+    // for i in 0..3 {
+    //     for j in 0..3 {
+    //         if (a_orig[i][j].re - a[i][j].re).powi(2) + (a_orig[i][j].im - a[i][j].im).powi(2) > eps {
+    //             equal = false;
+    //         }
+    //     }
+    // }
 
-    if equal == false {
-        println!("SVD failed!");
-    }
-    else {
-        println!("SVD successful!");
-    }
+    // if equal == false {
+    //     println!("SVD failed!");
+    // }
+    // else {
+    //     println!("SVD successful!");
+    // }
 
-    print_matrix(&a_orig, m, n);
-    print_matrix(&a, m, n);
+    // print_matrix(&a_orig, m, n);
+    // print_matrix(&a, m, n);
 }
 
 fn main() {
 
-    let mut a: Vec<Vec<Complex32>> = vec![
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4032, im:0.0876}, Complex32{re: 0.1678, im:0.0390}, Complex32{re: 0.5425, im:0.5118}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.3174, im:0.3352}, Complex32{re: 0.9784, im:0.4514}, Complex32{re: -0.4416, im:-1.3188}],
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4008, im:-0.0504}, Complex32{re: 0.0979, im:-0.2558}, Complex32{re: 0.2983, im:0.7800}]];
+    // let mut a: Vec<Vec<Complex32>> = vec![
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4032, im:0.0876}, Complex32{re: 0.1678, im:0.0390}, Complex32{re: 0.5425, im:0.5118}], 
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.3174, im:0.3352}, Complex32{re: 0.9784, im:0.4514}, Complex32{re: -0.4416, im:-1.3188}],
+    //                                     vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.4008, im:-0.0504}, Complex32{re: 0.0979, im:-0.2558}, Complex32{re: 0.2983, im:0.7800}]];
 
+    let mut a: Vec<Vec<Complex32>> = vec![
+                                        vec![Complex32{re: 0.4032, im:0.0876}, Complex32{re: 0.1678, im:0.0390}, Complex32{re: 0.5425, im:0.5118}], 
+                                        vec![Complex32{re: 0.3174, im:0.3352}, Complex32{re: 0.9784, im:0.4514}, Complex32{re: -0.4416, im:-1.3188}],
+                                        vec![Complex32{re: 0.4008, im:-0.0504}, Complex32{re: 0.0979, im:-0.2558}, Complex32{re: 0.2983, im:0.7800}]];
     let mut inv: Vec<Vec<Complex32>> = vec![
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
-                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}], 
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}],
+                                        vec![Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}, Complex32{re: 0.0, im:0.0}]];
     
-    check_svd(&mut a, &mut inv, 4, 4) ;
+    check_svd(&mut a, &mut inv, 3, 3) ;
 
     
 
