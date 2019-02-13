@@ -1,3 +1,5 @@
+// #![no_std]
+
 /// CSVD computes the singular value decomposition of an M by N complex matrix.
 ///
 /// Discussion:
@@ -75,11 +77,10 @@
 ///    The original test uses TOL = 1.E-31.
 
 extern crate num_complex;
-extern crate num_traits;
-extern crate backtrace;
+extern crate libm;
 
 use num_complex::Complex32;
-use num_traits::float::FloatCore;
+use libm::F32Ext;
 
 const NBIG: usize = 100;
 
@@ -101,7 +102,7 @@ fn print_vector(mat: &Vec<f32>, rows: usize) {
 }
 
 fn cabs(input: &Complex32) -> f32{
-    (input.re.powi(2) + input.im.powi(2)).sqrt()
+    F32Ext::sqrt(F32Ext::powf(input.re, 2.0) + F32Ext::powf(input.im, 2.0))
 }
 
 fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usize, p: usize, nu: usize, nv: usize, 
@@ -130,7 +131,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
     let mut k = 0;
     let mut b: [f32; NBIG] = [0.0; NBIG];
     let mut k1;
-    let tol = 1.5 * (10.0 as f32).powi(-31);
+    let tol = 1.5 * F32Ext::powf(10.0, -31.0);
 
     //10 continue for k in 0..n
     for k in 0..n {
@@ -139,7 +140,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
         // Elimination of A(I,K), I = K+1, ..., M.
         let mut z: f32 = 0.0;
         for i in k..m {
-            z = z + (a[i][k].re).powi(2) + (a[i][k].im).powi(2);
+            z = z + F32Ext::powf(a[i][k].re, 2.0) + F32Ext::powf(a[i][k].im, 2.0);
         }
 
         b[k] = 0.0;
@@ -147,7 +148,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
         let (mut w, mut q);
         if tol < z {
 
-            z = z.sqrt();
+            z = F32Ext::sqrt(z);
             b[k] = z;
             w = cabs(&a[k][k]);
 
@@ -191,12 +192,12 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
 
         z = 0.0;
         for j in k1..n {
-            z = z + a[k][j].re.powi(2) + a[k][j].im.powi(2)
+            z = z + F32Ext::powf(a[k][j].re, 2.0) + F32Ext::powf(a[k][j].im, 2.0);
         }
         c[k1] = 0.0;
 
         if tol < z {
-            z = z.sqrt();
+            z = F32Ext::sqrt(z);
             c[k1] = z;
             w = cabs(&a[k][k1]);
 
@@ -234,7 +235,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
     // Tolerance for negligible elements.
     //140 continue
     let mut eps: f32 = 0.0;
-    let eta: f32 = 1.1920929 * (10.0 as f32).powi(-7);
+    let eta: f32 = 1.1920929 * F32Ext::powf(10.0, -7.0);
     let mut t: [f32; NBIG] = [0.0; NBIG];
 
     for k in 0..n {
@@ -299,25 +300,25 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
         loop {
             for ll in 0..=k {
                 l = k - ll;
-                if t[l].abs() <= eps {
+                if F32Ext::abs(t[l]) <= eps {
                     //go to 290
                     break;
                 }
 
-                if s[l-1].abs() <= eps {
+                if F32Ext::abs(s[l-1]) <= eps {
                     //go to 240
                     break;
                 }
 
             }
 
-            if t[l].abs() <= eps {
+            if F32Ext::abs(t[l]) <= eps {
                 //go to 290
             }
 
             //Cancellation of E(L).
             // 240 continue
-            else if s[l-1].abs() <= eps {
+            else if F32Ext::abs(s[l-1]) <= eps {
                 cs = 0.0;
                 sn = 1.0;
                 l1 = l - 1;
@@ -326,13 +327,13 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
                     f = sn * t[i];
                     t[i] = cs * t[i];
 
-                    if f.abs() <= eps {
+                    if F32Ext::abs(f) <= eps {
                         //go to 290
                         break;
                     }
 
                     h = s[i];
-                    w = (f * f + h * h).sqrt();
+                    w = F32Ext::sqrt(f * f + h * h);
                     s[i] = w;
                     cs = h / w;
                     sn = - f / w;
@@ -372,7 +373,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
             g = t[k-1];
             h = t[k];
             f = ( ( y - w ) * ( y + w ) + ( g - h ) * ( g + h ) ) / ( 2.0 * h * y );
-            g = (f * f + 1.0).sqrt();
+            g = F32Ext::sqrt(f * f + 1.0);
             if f < 0.0 {
                 g = -g;
             }
@@ -389,7 +390,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
                 y = s[i];
                 h = sn * g;
                 g = cs * g;
-                w = (h * h + f * f).sqrt();
+                w = F32Ext::sqrt(h * h + f * f);
                 t[i-1] = w;
                 cs = f / w;
                 sn = h / w;
@@ -407,7 +408,7 @@ fn csvd(a: &mut Vec<Vec<Complex32>>, mmax: usize, nmax: usize, n: usize, m: usiz
                     }
                 }
 
-                w = (h * h + f * f).sqrt();
+                w = F32Ext::sqrt(h * h + f * f);
                 s[i-1] = w;
                 cs = f / w;
                 sn = h / w;
@@ -658,7 +659,7 @@ fn check_svd(mut a: &mut Vec<Vec<Complex32>>, mut inv: &mut Vec<Vec<Complex32>>,
 
     for i in 0..m {
         for j in 0..n {
-            if (a_orig[i][j].re - a[i][j].re).powi(2) + (a_orig[i][j].im - a[i][j].im).powi(2) > eps {
+            if F32Ext::powf(a_orig[i][j].re - a[i][j].re, 2.0) + F32Ext::powf(a_orig[i][j].im - a[i][j].im, 2.0) > eps {
                 equal = false;
             }
         }
@@ -700,7 +701,7 @@ fn check_svd(mut a: &mut Vec<Vec<Complex32>>, mut inv: &mut Vec<Vec<Complex32>>,
     }
     for i in 0..m {
         for j in 0..n {
-            if (a_orig[i][j].re - a[i][j].re).powi(2) + (a_orig[i][j].im - a[i][j].im).powi(2) > eps {
+            if F32Ext::powf(a_orig[i][j].re - a[i][j].re, 2.0) + F32Ext::powf(a_orig[i][j].im - a[i][j].im, 2.0) > eps {
                 equal = false;
             }
         }
