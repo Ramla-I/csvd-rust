@@ -1,7 +1,7 @@
 use num_complex::Complex32;
 use libm::F32Ext;
 use alloc::vec::Vec;
-use rand::Rng;
+// use rand::Rng;
 
 use super::csvd::csvd;
 use super::pinv;
@@ -147,20 +147,20 @@ fn check_svd(mut a: &mut Vec<Complex32>, m: usize, n: usize) {
     
 }
 
-/// A basic example to test with: https://math.stackexchange.com/questions/647321/moore-penrose-inverse-of-complex-square-matrices
-pub fn test() {
+// /// A basic example to test with: https://math.stackexchange.com/questions/647321/moore-penrose-inverse-of-complex-square-matrices
+// pub fn test() {
 
-    let m = 8;
-    let n = 8;
+//     let m = 8;
+//     let n = 8;
 
-    let mut a: Vec<Complex32> = Vec::with_capacity(m*n);
+//     let mut a: Vec<Complex32> = Vec::with_capacity(m*n);
 
-    let mut rng = rand::thread_rng();
+//     let mut rng = rand::thread_rng();
 
-    for _ in 0..m*n {
-        a.push(Complex32{re: rng.gen(), im: rng.gen()})
-    }
+//     for _ in 0..m*n {
+//         a.push(Complex32{re: rng.gen(), im: rng.gen()})
+//     }
     
-    check_svd(&mut a, m, n) ;
+//     check_svd(&mut a, m, n) ;
   
-}
+// }

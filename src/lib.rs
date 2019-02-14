@@ -5,7 +5,7 @@
 extern crate alloc;
 extern crate num_complex;
 extern crate libm;
-extern crate rand;
+// extern crate rand;
 
 mod csvd;
 mod test;
@@ -13,7 +13,6 @@ mod test;
 use num_complex::Complex32;
 use alloc::vec::Vec;
 use self::csvd::csvd;
-use self::test::test;
 
 /// Finds the pseudo-inverse of matrix using Singular Value Decomposition
 /// Assumes that input_mat has dimensions mxn and inverse_mat has dimension nxm
@@ -85,6 +84,3 @@ fn find_pinv_from_svd(s: &mut Vec<f32>, u: &Vec<Complex32>, v: &Vec<Complex32>, 
 }
 
 
-fn main () {
-    test();
-}

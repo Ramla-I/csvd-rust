@@ -12,8 +12,8 @@ debug = true
 [dependencies]
 libm = "0.1.2"
 
-[dependencies.rand]
-version = "0.6.5"
+# [dependencies.rand]
+# version = "0.6.5"
 
 [dependencies.num-complex]
 version = "0.2"
