@@ -1,5 +1,5 @@
 [package]
-name = "csvd"
+name = "lin_alg"
 version = "0.1.0"
 authors = ["Ramla-I <ijazramla@gmail.com>"]
 edition = "2018"
@@ -11,6 +11,9 @@ debug = true
 
 [dependencies]
 libm = "0.1.2"
+
+[dependencies.rand]
+version = "0.6.5"
 
 [dependencies.num-complex]
 version = "0.2"
