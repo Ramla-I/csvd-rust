@@ -83,4 +83,19 @@ fn find_pinv_from_svd(s: &mut Vec<f32>, u: &Vec<Complex32>, v: &Vec<Complex32>, 
     }
 }
 
+pub fn matrix_mult(mat_a: &[Complex32], a_rows: usize, a_cols: usize, mat_b: &[Complex32], b_rows: usize, b_cols: usize, mat_c: &mut[Complex32]) -> Result< (), &'static str> {
+    if a_cols != b_rows {
+        return Err("Matrix dimension not compatible!");
+    }
+
+    for i in 0..a_rows {
+        for j in 0..b_cols {
+            for k in 0..a_cols{
+                mat_c[i*a_rows + j] += mat_a[i*a_rows + k] * mat_b[k*b_rows + j]; 
+            }
+        }
+    }
+
+    Ok(())
+}
 
