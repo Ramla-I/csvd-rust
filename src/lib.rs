@@ -91,7 +91,7 @@ pub fn matrix_mult(mat_a: &[Complex32], a_rows: usize, a_cols: usize, mat_b: &[C
     for i in 0..a_rows {
         for j in 0..b_cols {
             for k in 0..a_cols{
-                mat_c[i*a_rows + j] += mat_a[i*a_rows + k] * mat_b[k*b_rows + j]; 
+                mat_c[i * b_cols  + j] += mat_a[i*a_cols + k] * mat_b[k*b_cols + j]; 
             }
         }
     }
