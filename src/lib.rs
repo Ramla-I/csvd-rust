@@ -7,7 +7,7 @@ extern crate num_complex;
 extern crate libm;
 // extern crate rand;
 
-mod csvd;
+pub mod csvd;
 mod test;
 
 use num_complex::Complex32;
