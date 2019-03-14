@@ -51,7 +51,7 @@ pub fn pinv(mut input_mat: &mut Vec<Complex32>, mut inverse_mat: &mut Vec<Comple
 /// INV = V x S+ x U*
 /// where S+ is found by taking the reciprocal fo all non-zero elements of S and changing the dimension from n to nxm
 /// and U* is the conjugate-transpose of U
-fn find_pinv_from_svd(s: &mut Vec<f32>, u: &Vec<Complex32>, v: &Vec<Complex32>, m: usize, n: usize, inv: &mut Vec<Complex32>) {
+pub fn find_pinv_from_svd(s: &mut Vec<f32>, u: &Vec<Complex32>, v: &Vec<Complex32>, m: usize, n: usize, inv: &mut Vec<Complex32>) {
     // cut-off value for a number to be assumed to be 0
     let eps = 0.0001;
     let mut n_ = n;
