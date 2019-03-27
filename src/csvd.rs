@@ -82,13 +82,29 @@ use libm::F32Ext;
 
 const NBIG: usize = 100;
 
+fn sqrt(input: f32) -> f32 {
+    F32Ext::sqrt(input)
+}
+
+fn powf(input: f32, power: f32) -> f32 {
+    F32Ext::powf(input, power)
+}
+
+fn abs(input: f32) -> f32 {
+    F32Ext::abs(input)
+}
+
 fn cabs(input: &Complex32) -> f32{
-    F32Ext::sqrt(F32Ext::powf(input.re, 2.0) + F32Ext::powf(input.im, 2.0))
+    let a = powf(input.re, 2.0);
+    let b = powf(input.im, 2.0); 
+    sqrt(a + b)
 }
 
 pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize, p: usize, nu: usize, nv: usize, 
         s: &mut Vec<f32>, u: &mut Vec<Complex32>, v: &mut Vec<Complex32>) 
         -> Result<(), &'static str> {
+    
+    // debug!("In csvd");
 
     //check n
     if n < 1 {
@@ -112,7 +128,7 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
     let mut k = 0;
     let mut b: [f32; NBIG] = [0.0; NBIG];
     let mut k1;
-    let tol = 1.5 * F32Ext::powf(10.0, -31.0);
+    let tol = 1.5 * powf(10.0, -31.0);
 
     //10 continue for k in 0..n
     for k in 0..n {
@@ -121,7 +137,7 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
         // Elimination of A(I,K), I = K+1, ..., M.
         let mut z: f32 = 0.0;
         for i in k..m {
-            z = z + F32Ext::powf(a[i*m + k].re, 2.0) + F32Ext::powf(a[i*m + k].im, 2.0);
+            z = z + powf(a[i*m + k].re, 2.0) + powf(a[i*m + k].im, 2.0);
         }
 
         b[k] = 0.0;
@@ -129,7 +145,7 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
         let (mut w, mut q);
         if tol < z {
 
-            z = F32Ext::sqrt(z);
+            z = sqrt(z);
             b[k] = z;
             w = cabs(&a[k*m + k]);
 
@@ -173,12 +189,12 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
 
         z = 0.0;
         for j in k1..n {
-            z = z + F32Ext::powf(a[k*m + j].re, 2.0) + F32Ext::powf(a[k*m + j].im, 2.0);
+            z = z + powf(a[k*m + j].re, 2.0) + powf(a[k*m + j].im, 2.0);
         }
         c[k1] = 0.0;
 
         if tol < z {
-            z = F32Ext::sqrt(z);
+            z = sqrt(z);
             c[k1] = z;
             w = cabs(&a[k*m + k1]);
 
@@ -216,7 +232,7 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
     // Tolerance for negligible elements.
     //140 continue
     let mut eps: f32 = 0.0;
-    let eta: f32 = 1.1920929 * F32Ext::powf(10.0, -7.0);
+    let eta: f32 = 1.1920929 * powf(10.0, -7.0);
     let mut t: [f32; NBIG] = [0.0; NBIG];
 
     for k in 0..n {
@@ -281,25 +297,25 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
         loop {
             for ll in 0..=k {
                 l = k - ll;
-                if F32Ext::abs(t[l]) <= eps {
+                if abs(t[l]) <= eps {
                     //go to 290
                     break;
                 }
 
-                if F32Ext::abs(s[l-1]) <= eps {
+                if abs(s[l-1]) <= eps {
                     //go to 240
                     break;
                 }
 
             }
 
-            if F32Ext::abs(t[l]) <= eps {
+            if abs(t[l]) <= eps {
                 //go to 290
             }
 
             //Cancellation of E(L).
             // 240 continue
-            else if F32Ext::abs(s[l-1]) <= eps {
+            else if abs(s[l-1]) <= eps {
                 cs = 0.0;
                 sn = 1.0;
                 l1 = l - 1;
@@ -308,13 +324,13 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
                     f = sn * t[i];
                     t[i] = cs * t[i];
 
-                    if F32Ext::abs(f) <= eps {
+                    if abs(f) <= eps {
                         //go to 290
                         break;
                     }
 
                     h = s[i];
-                    w = F32Ext::sqrt(f * f + h * h);
+                    w = sqrt(f * f + h * h);
                     s[i] = w;
                     cs = h / w;
                     sn = - f / w;
@@ -354,7 +370,7 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
             g = t[k-1];
             h = t[k];
             f = ( ( y - w ) * ( y + w ) + ( g - h ) * ( g + h ) ) / ( 2.0 * h * y );
-            g = F32Ext::sqrt(f * f + 1.0);
+            g = sqrt(f * f + 1.0);
             if f < 0.0 {
                 g = -g;
             }
@@ -371,7 +387,7 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
                 y = s[i];
                 h = sn * g;
                 g = cs * g;
-                w = F32Ext::sqrt(h * h + f * f);
+                w = sqrt(h * h + f * f);
                 t[i-1] = w;
                 cs = f / w;
                 sn = h / w;
@@ -389,7 +405,7 @@ pub fn csvd(a: &mut Vec<Complex32>, mmax: usize, nmax: usize, n: usize, m: usize
                     }
                 }
 
-                w = F32Ext::sqrt(h * h + f * f);
+                w = sqrt(h * h + f * f);
                 s[i-1] = w;
                 cs = f / w;
                 sn = h / w;

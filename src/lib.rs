@@ -2,17 +2,20 @@
 #![feature(alloc)]
 #![feature(extern_crate_item_prelude)]
 
+#[macro_use] extern crate log;
 extern crate alloc;
 extern crate num_complex;
 extern crate libm;
 // extern crate rand;
+extern crate aligned_vec;
 
-mod csvd;
+pub mod csvd;
 mod test;
 
 use num_complex::Complex32;
 use alloc::vec::Vec;
 use self::csvd::csvd;
+use aligned_vec::{aligned_alloc, aligned_alloc_f32_16};
 
 /// Finds the pseudo-inverse of matrix using Singular Value Decomposition
 /// Assumes that input_mat has dimensions mxn and inverse_mat has dimension nxm
@@ -22,22 +25,25 @@ pub fn pinv(mut input_mat: &mut Vec<Complex32>, mut inverse_mat: &mut Vec<Comple
     let n = input_num_cols;
 
     //create S vector with dimension n
-    let mut s: Vec<f32> = Vec::with_capacity(n);
-    for _ in 0..n {
-        s.push(0.0);
-    }
+    let mut s: Vec<f32> = Vec::new(); //with_capacity(n);
+    let _ = aligned_alloc_f32_16(n, &mut s);
+    // for _ in 0..n {
+    //     s.push(0.0);
+    // }
 
     //create U matrix dimension mxm
-    let mut u: Vec<Complex32> = Vec::with_capacity(m*m);
-    for _ in 0..m*m {
-        u.push(Complex32{re: 0.0, im: 0.0});
-    }
+    let mut u: Vec<Complex32> = Vec::new(); //with_capacity(m*m);
+    let _ = aligned_alloc(16, m*m, &mut u);
+    // for _ in 0..m*m {
+    //     u.push(Complex32{re: 0.0, im: 0.0});
+    // }
 
     //create v matrix with dimension nxn
-    let mut v: Vec<Complex32> = Vec::with_capacity(n*n);
-    for _ in 0..n*n {
-        v.push(Complex32{re: 0.0, im: 0.0});
-    }
+    let mut v: Vec<Complex32> = Vec::new(); //with_capacity(n*n);
+    let _ = aligned_alloc(16, n*n, &mut v);
+    // for _ in 0..n*n {
+    //     v.push(Complex32{re: 0.0, im: 0.0});
+    // }
 
     csvd(&mut input_mat, m, n, n, m, 0, m, n, &mut s, &mut u, &mut v)?;
 
@@ -51,7 +57,9 @@ pub fn pinv(mut input_mat: &mut Vec<Complex32>, mut inverse_mat: &mut Vec<Comple
 /// INV = V x S+ x U*
 /// where S+ is found by taking the reciprocal fo all non-zero elements of S and changing the dimension from n to nxm
 /// and U* is the conjugate-transpose of U
-fn find_pinv_from_svd(s: &mut Vec<f32>, u: &Vec<Complex32>, v: &Vec<Complex32>, m: usize, n: usize, inv: &mut Vec<Complex32>) {
+pub fn find_pinv_from_svd(s: &mut Vec<f32>, u: &Vec<Complex32>, v: &Vec<Complex32>, m: usize, n: usize, inv: &mut Vec<Complex32>) {
+
+    // debug!("In find pinv from svd");
     // cut-off value for a number to be assumed to be 0
     let eps = 0.0001;
     let mut n_ = n;
