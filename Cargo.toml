@@ -23,8 +23,8 @@ default-features = false
 version = "0.2.6"
 default-features = false
 
-[dependencies.aligned_vec]
-path = "../../kernel/aligned_vec"
+# [dependencies.aligned_vec]
+# path = "../../kernel/aligned_vec"
 
 [dependencies.log]
 default-features = false

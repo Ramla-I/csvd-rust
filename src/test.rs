@@ -4,7 +4,8 @@ use alloc::vec::Vec;
 // use rand::Rng;
 
 use super::csvd::csvd;
-use super::pinv;
+// use super::pinv;
+use super::*;
 
 // fn print_matrix(mat: &Vec<Complex32>, rows: usize, cols: usize) {
 //     for i in 0..rows {
@@ -28,22 +29,25 @@ use super::pinv;
 /// stores the new matrix in a
 fn find_orig_matrix_from_svd(mut a: &mut Vec<Complex32>, m: usize, n: usize) {
     //create S vector with dimension n
-    let mut s: Vec<f32> = Vec::with_capacity(n);
-    for _ in 0..n {
-        s.push(0.0);
-    }
+    let mut s: Vec<f32> = Vec::new(); //with_capacity(n);
+    let _ = aligned_alloc_f32_32(n, &mut s);
+    // for _ in 0..n {
+    //     s.push(0.0);
+    // }
 
     //create U matrix dimension mxm
-    let mut u: Vec<Complex32> = Vec::with_capacity(m*m);
-    for _ in 0..m*m {
-        u.push(Complex32{re: 0.0, im: 0.0});
-    }
+    let mut u: Vec<Complex32> = Vec::new(); //with_capacity(m*m);
+    let _ = aligned_alloc(32, m*m, &mut u);
+    // for _ in 0..m*m {
+    //     u.push(Complex32{re: 0.0, im: 0.0});
+    // }
 
     //create v matrix with dimension nxn
-    let mut v: Vec<Complex32> = Vec::with_capacity(n*n);
-    for _ in 0..n*n {
-        v.push(Complex32{re: 0.0, im: 0.0});
-    }
+    let mut v: Vec<Complex32> = Vec::new(); //with_capacity(n*n);
+    let _ = aligned_alloc(32, n*n, &mut v);
+    // for _ in 0..n*n {
+    //     v.push(Complex32{re: 0.0, im: 0.0});
+    // }
 
     let _ = csvd(&mut a, m, n, n, m, 0, m, n, &mut s, &mut u, &mut v);
 
@@ -64,10 +68,11 @@ fn check_pinv(mut a: &mut Vec<Complex32>, m: usize, n: usize) -> bool {
     let a_orig = a.clone();
 
     //create inverse matrix with dimension nxm
-    let mut inv: Vec<Complex32> = Vec::with_capacity(n*m);
-    for _ in 0..n*m {
-        inv.push(Complex32{re: 0.0, im: 0.0});
-    }
+    let mut inv: Vec<Complex32> = Vec::new();
+    aligned_alloc_32(n*m, &mut inv);
+    // for _ in 0..n*m {
+    //     inv.push(Complex32{re: 0.0, im: 0.0});
+    // }
 
     let _ = pinv(&mut a, &mut inv, m, n);
     
@@ -128,39 +133,42 @@ fn check_svd(mut a: &mut Vec<Complex32>, m: usize, n: usize) {
 
     find_orig_matrix_from_svd(&mut a, m, n);
 
-    // if check_matrix_equality(&a_orig, &a, m, n){
-    //     println!("svd successful");
-    // }
-    // else {
-    //     println!("svd failed");
-    // }
+    if check_matrix_equality(&a_orig, &a, m, n){
+        debug!("svd successful");
+    }
+    else {
+        debug!("svd failed");
+    }
 
-    // *a = a_orig.clone();
+    *a = a_orig.clone();
 
-    // if check_pinv(&mut a, m, n) {
-    //     println!("pseudo-inverse successful");
-    // }
+    if check_pinv(&mut a, m, n) {
+        debug!("pseudo-inverse successful");
+    }
 
-    // else {
-    //     println!("pseudo-inverse failed");
-    // }
+    else {
+        debug!("pseudo-inverse failed");
+    }
     
 }
 
-// /// A basic example to test with: https://math.stackexchange.com/questions/647321/moore-penrose-inverse-of-complex-square-matrices
-// pub fn test() {
+/// A basic example to test with: https://math.stackexchange.com/questions/647321/moore-penrose-inverse-of-complex-square-matrices
+pub fn test() {
 
-//     let m = 8;
-//     let n = 8;
+    let m = 8;
+    let n = 8;
 
-//     let mut a: Vec<Complex32> = Vec::with_capacity(m*n);
+    let mut a: Vec<Complex32> = Vec::new();
+    aligned_alloc_32(m*n, &mut a);
+    a.clear();
 
-//     let mut rng = rand::thread_rng();
+    // let mut rng = rand::thread_rng();
 
-//     for _ in 0..m*n {
-//         a.push(Complex32{re: rng.gen(), im: rng.gen()})
-//     }
+    for _ in 0..m*n {
+        // a.push(Complex32{re: rng.gen(), im: rng.gen()})
+        a.push(Complex32{re: 2.1, im: 1.3});
+    }
     
-//     check_svd(&mut a, m, n) ;
+    check_svd(&mut a, m, n) ;
   
-// }
+}

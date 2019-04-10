@@ -7,15 +7,129 @@ extern crate alloc;
 extern crate num_complex;
 extern crate libm;
 // extern crate rand;
-extern crate aligned_vec;
+// extern crate aligned_vec;
 
 pub mod csvd;
-mod test;
+pub mod test;
 
 use num_complex::Complex32;
 use alloc::vec::Vec;
 use self::csvd::csvd;
-use aligned_vec::{aligned_alloc, aligned_alloc_f32_16};
+// use aligned_vec::{aligned_alloc, aligned_alloc_f32_16};
+use core::mem;
+
+#[repr(align(16))]
+struct Align16(u64,u64);
+
+#[repr(align(32))]
+struct Align32(u64,u64,u64,u64);
+
+#[repr(align(64))]
+struct Align64(u64,u64,u64,u64,u64,u64,u64,u64);
+
+/// function to return a vector aligned at "alignment" no of bytes with the only valid inputs being 16, 32 and 64
+/// len is the the number of Complex32 items in the vector
+/// vec is where the resulting vector is stored
+/// function also initializes all elements to '0.0 + 0.0i'
+pub fn aligned_alloc(alignment: u8, len: usize, mut vec: &mut Vec<Complex32>) -> Result<(), &'static str> {
+    
+    if alignment == 16 {
+        aligned_alloc_16(len, &mut vec);
+    }
+    else if alignment == 32 {
+        aligned_alloc_32(len, &mut vec);
+    }
+    else if alignment == 64 {
+        aligned_alloc_64(len, &mut vec);
+    }
+    else{
+        return Err("Invalid alignment input")
+    }
+    
+ 
+    Ok(())
+}
+
+fn aligned_alloc_16(len: usize, vec: &mut Vec<Complex32>) {
+    let C32_in_A16 = 2;
+
+    let buffer : Vec<Align16> = Vec::with_capacity(len/C32_in_A16);
+    let buffer_ptr = buffer.as_slice().as_ptr() as usize;
+    // debug!("Aligned pointer: {:#X}", buffer_ptr);
+    let ptr = buffer_ptr as *mut Complex32;
+    mem::forget(buffer);
+    *vec = unsafe {Vec::from_raw_parts(ptr, len, len)};
+
+    for num in vec {
+        num.re = 0.0;
+        num.im = 0.0;
+    }
+}
+
+fn aligned_alloc_32(len: usize, vec: &mut Vec<Complex32>) {
+    let C32_in_A32 = 4;
+
+    let buffer : Vec<Align32> = Vec::with_capacity(len/C32_in_A32);
+    let buffer_ptr = buffer.as_slice().as_ptr() as usize;
+    // debug!("Aligned pointer: {:#X}", buffer_ptr);
+    let ptr = buffer_ptr as *mut Complex32;
+    mem::forget(buffer);
+    *vec = unsafe {Vec::from_raw_parts(ptr, len, len)};
+
+    for num in vec {
+        num.re = 0.0;
+        num.im = 0.0;
+    }
+}
+
+fn aligned_alloc_64(len: usize, vec: &mut Vec<Complex32>) {
+    let C32_in_A64 = 8;
+
+    let buffer : Vec<Align64> = Vec::with_capacity(len/C32_in_A64);
+    let buffer_ptr = buffer.as_slice().as_ptr() as usize;
+    // debug!("Aligned pointer: {:#X}", buffer_ptr);
+    let ptr = buffer_ptr as *mut Complex32;
+    mem::forget(buffer);
+    *vec = unsafe {Vec::from_raw_parts(ptr, len, len)};
+
+    for num in vec {
+        num.re = 0.0;
+        num.im = 0.0;
+    }
+    
+}
+
+///TODO: need to generalize this
+pub fn aligned_alloc_u8_32(len: usize, vec: &mut Vec<u8>) {
+    let U8_in_A32 = 32;
+
+    let buffer : Vec<Align16> = Vec::with_capacity(len/U8_in_A32);
+    let buffer_ptr = buffer.as_slice().as_ptr() as usize;
+    // debug!("Aligned pointer: {:#X}", buffer_ptr);
+    let ptr = buffer_ptr as *mut u8;
+    mem::forget(buffer);
+    *vec = unsafe {Vec::from_raw_parts(ptr, len, len)};
+
+    for num in vec {
+        *num = 0;
+    }
+}
+
+///TODO: need to generalize this
+pub fn aligned_alloc_f32_32(len: usize, vec: &mut Vec<f32>) {
+    let F32_in_A32 = 8;
+
+    let buffer : Vec<Align16> = Vec::with_capacity(len/F32_in_A32);
+    let buffer_ptr = buffer.as_slice().as_ptr() as usize;
+    // debug!("Aligned pointer: {:#X}", buffer_ptr);
+    let ptr = buffer_ptr as *mut f32;
+    mem::forget(buffer);
+    *vec = unsafe {Vec::from_raw_parts(ptr, len, len)};
+
+    for num in vec {
+        *num = 0.0;
+    }
+}
 
 /// Finds the pseudo-inverse of matrix using Singular Value Decomposition
 /// Assumes that input_mat has dimensions mxn and inverse_mat has dimension nxm
@@ -26,21 +140,21 @@ pub fn pinv(mut input_mat: &mut Vec<Complex32>, mut inverse_mat: &mut Vec<Comple
 
     //create S vector with dimension n
     let mut s: Vec<f32> = Vec::new(); //with_capacity(n);
-    let _ = aligned_alloc_f32_16(n, &mut s);
+    let _ = aligned_alloc_f32_32(n, &mut s);
     // for _ in 0..n {
     //     s.push(0.0);
     // }
 
     //create U matrix dimension mxm
     let mut u: Vec<Complex32> = Vec::new(); //with_capacity(m*m);
-    let _ = aligned_alloc(16, m*m, &mut u);
+    let _ = aligned_alloc(32, m*m, &mut u);
     // for _ in 0..m*m {
     //     u.push(Complex32{re: 0.0, im: 0.0});
     // }
 
     //create v matrix with dimension nxn
     let mut v: Vec<Complex32> = Vec::new(); //with_capacity(n*n);
-    let _ = aligned_alloc(16, n*n, &mut v);
+    let _ = aligned_alloc(32, n*n, &mut v);
     // for _ in 0..n*n {
     //     v.push(Complex32{re: 0.0, im: 0.0});
     // }
@@ -92,14 +206,51 @@ pub fn find_pinv_from_svd(s: &mut Vec<f32>, u: &Vec<Complex32>, v: &Vec<Complex3
 }
 
 pub fn matrix_mult(mat_a: &[Complex32], a_rows: usize, a_cols: usize, mat_b: &[Complex32], b_rows: usize, b_cols: usize, mat_c: &mut[Complex32]) -> Result< (), &'static str> {
+    let a = &mat_a[0..a_rows*a_cols];
+    let c = &mut mat_c[0..a_rows*b_cols];
     if a_cols != b_rows {
         return Err("Matrix dimension not compatible!");
     }
 
+    // //transpose b
+    // let mut b = Vec::new();
+    // aligned_alloc_32(b_rows*b_cols, &mut b);
+
+    // for i in 0..b_cols {
+    //     for j in 0..b_rows {
+    //         b[i*b_rows + j] = mat_b[j*b_cols +i];
+    //     }
+    // }
+
+    // let b = &b[0..b_cols*b_rows];
+
+
+    // let mut i = 0;
+    // loop {
+    //     if i==a_rows {break;}
+    //     let mut j = 0;
+
+    //     loop {
+    //         if j == a_rows { break;}
+    //         let mut k = 0;
+
+    //         loop {
+    //             if k == a_cols { break;}
+
+    //             c[i * b_cols + j] += a[j*a_cols + k] * b[j*a_cols + k];
+    //             k += 1;
+    //         }
+
+    //         j += 1;
+    //     }
+
+    //     i +=1;
+    // }
+
     for i in 0..a_rows {
         for j in 0..b_cols {
             for k in 0..a_cols{
-                mat_c[i * b_cols  + j] += mat_a[i*a_cols + k] * mat_b[k*b_cols + j]; 
+                c[i * b_cols  + j] += a[i*a_cols + k] * b[k*b_cols + j]; 
             }
         }
     }
