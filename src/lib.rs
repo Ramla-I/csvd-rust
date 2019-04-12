@@ -139,25 +139,22 @@ pub fn pinv(mut input_mat: &mut Vec<Complex32>, mut inverse_mat: &mut Vec<Comple
     let n = input_num_cols;
 
     //create S vector with dimension n
-    let mut s: Vec<f32> = Vec::new(); //with_capacity(n);
-    let _ = aligned_alloc_f32_32(n, &mut s);
-    // for _ in 0..n {
-    //     s.push(0.0);
-    // }
+    let mut s: Vec<f32> = Vec::with_capacity(n);
+    for _ in 0..n {
+        s.push(0.0);
+    }
 
     //create U matrix dimension mxm
-    let mut u: Vec<Complex32> = Vec::new(); //with_capacity(m*m);
-    let _ = aligned_alloc(32, m*m, &mut u);
-    // for _ in 0..m*m {
-    //     u.push(Complex32{re: 0.0, im: 0.0});
-    // }
+    let mut u: Vec<Complex32> = Vec::with_capacity(m*m);
+    for _ in 0..m*m {
+        u.push(Complex32{re: 0.0, im: 0.0});
+    }
 
     //create v matrix with dimension nxn
-    let mut v: Vec<Complex32> = Vec::new(); //with_capacity(n*n);
-    let _ = aligned_alloc(32, n*n, &mut v);
-    // for _ in 0..n*n {
-    //     v.push(Complex32{re: 0.0, im: 0.0});
-    // }
+    let mut v: Vec<Complex32> = Vec::with_capacity(n*n);
+    for _ in 0..n*n {
+        v.push(Complex32{re: 0.0, im: 0.0});
+    }
 
     csvd(&mut input_mat, m, n, n, m, 0, m, n, &mut s, &mut u, &mut v)?;
 
