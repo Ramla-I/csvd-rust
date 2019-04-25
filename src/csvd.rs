@@ -80,7 +80,7 @@ use alloc::vec::Vec;
 use num_complex::Complex32;
 use libm::F32Ext;
 
-const NBIG: usize = 100;
+const NBIG: usize = 150;
 
 fn sqrt(input: f32) -> f32 {
     F32Ext::sqrt(input)
