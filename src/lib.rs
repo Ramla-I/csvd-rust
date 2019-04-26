@@ -202,7 +202,7 @@ pub fn find_pinv_from_svd(s: &mut Vec<f32>, u: &Vec<Complex32>, v: &Vec<Complex3
     }
 }
 
-pub fn matrix_mult(mat_a: &[Complex32], a_rows: usize, a_cols: usize, mat_b: &[Complex32], b_rows: usize, b_cols: usize, mat_c: &mut[Complex32]) -> Result< (), &'static str> {
+pub fn matrix_mult(a: &[Complex32], a_rows: usize, a_cols: usize, b: &[Complex32], b_rows: usize, b_cols: usize, c: &mut[Complex32]) -> Result< (), &'static str> {
 //     let a = &mat_a[0..a_rows*a_cols];
 //     let b = &mat_b[0..b_rows*b_cols];
 //     let c = &mut mat_c[0..a_rows*b_cols];
